@@ -56,9 +56,9 @@ services:
     ports:
       - "8090:8090"
     environment:
-      - PB_ADMIN_EMAIL=admin@example.com
-      - PB_ADMIN_PASSWORD=SecurePassword123
-      - ENCRYPTION=your32characterencryptionkeyhere
+      - PB_ADMIN_EMAIL=supercat@pb.io
+      - PB_ADMIN_PASSWORD=Supercat#1
+      - ENCRYPTION=$(openssl rand -hex 16) # Must be 32 characters long
     volumes:
       - ./pb_data:/pb_data       # Database and storage
       - ./pb_public:/pb_public   # Public files
