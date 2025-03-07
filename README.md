@@ -43,8 +43,6 @@ Access the admin UI at http://localhost:8090/_/ after running.
 |---------------|-------------|---------|
 | `latest` | Latest stable release | `nxtgencat/pocketbase:latest` |
 | `x.y.z` | Specific patch version | `nxtgencat/pocketbase:0.16.3` |
-| `x.y` | Latest patch in minor version | `nxtgencat/pocketbase:0.16` |
-| `x` | Latest minor in major version | `nxtgencat/pocketbase:0` |
 
 ## Docker Compose (Recommended)
 
