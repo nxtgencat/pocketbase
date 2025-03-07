@@ -1,0 +1,94 @@
+name: Release on pocketbase/release
+on:
+  schedule:
+    - cron: "0 * * * *"  # Runs every hour
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release"
+        required: true
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get latest PocketBase release
+        if: github.event_name != 'workflow_dispatch'
+        id: pocketbase
+        uses: actions/github-script@v7
+        env:
+          OWNER: pocketbase
+          REPO: pocketbase
+        with:
+          result-encoding: string
+          script: |
+            const { data } = await github.rest.repos.listReleases({
+              owner: process.env.OWNER,
+              repo: process.env.REPO
+            });
+            const latest = data.filter(release => !release.draft && !release.prerelease)[0];
+            return latest.tag_name.replace('v','');
+
+      - name: Get latest container version from Docker Hub
+        if: github.event_name != 'workflow_dispatch'
+        id: container
+        run: |
+          VERSION=$(curl -s "https://hub.docker.com/v2/repositories/${{ secrets.DOCKER_USERNAME }}/pocketbase/tags/" \
+          | jq -r '.results | map(select(.name | test("^\\d+\\.\\d+\\.\\d+$"))) | first.name')
+          echo "container_version=${VERSION:-0.0.0}" >> $GITHUB_OUTPUT
+          echo "pb_version=${{ steps.pocketbase.outputs.result }}" >> $GITHUB_OUTPUT
+
+      - name: Set version
+        id: version
+        run: echo "value=${{ github.event.inputs.version || steps.container.outputs.pb_version }}" >> $GITHUB_OUTPUT
+
+      - name: Check if update needed
+        id: check
+        if: github.event_name != 'workflow_dispatch'
+        run: |
+          if [ "${{ steps.container.outputs.pb_version }}" != "${{ steps.container.outputs.container_version }}" ]; then
+            echo "update=true" >> $GITHUB_OUTPUT
+          else
+            echo "update=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up QEMU
+        if: github.event_name == 'workflow_dispatch' || steps.check.outputs.update == 'true'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        if: github.event_name == 'workflow_dispatch' || steps.check.outputs.update == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        if: github.event_name == 'workflow_dispatch' || steps.check.outputs.update == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Docker meta
+        if: github.event_name == 'workflow_dispatch' || steps.check.outputs.update == 'true'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: docker.io/${{ secrets.DOCKER_USERNAME }}/pocketbase
+          tags: |
+            type=semver,pattern={{version}},value=${{ steps.version.outputs.value }}
+            type=raw,value=latest
+
+      - name: Build and push Docker image
+        if: github.event_name == 'workflow_dispatch' || steps.check.outputs.update == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          provenance: false
+          build-args: VERSION=${{ steps.version.outputs.value }}
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
