@@ -1,70 +1,70 @@
-
 <p align="center">
   <a href="https://pocketbase.io/">
     <img alt="PocketBase logo" height="128" src="https://pocketbase.io/images/logo.svg">
-    <h1 align="center">Docker Image for PocketBase</h1>
+    <h1 align="center">PocketBase Docker</h1>
   </a>
 </p>
 
 <p align="center">
-   <a aria-label="Latest PocketBase Version" href="https://github.com/pocketbase/pocketbase/releases" target="_blank">
-    <img alt="Latest PocketBase Version" src="https://img.shields.io/github/v/release/pocketbase/pocketbase?color=success&display_name=tag&label=latest&logo=docker&logoColor=%23fff&sort=semver&style=flat-square">
+  <a aria-label="Latest Release" href="https://github.com/pocketbase/pocketbase/releases">
+    <img alt="Latest PocketBase Version" src="https://img.shields.io/github/v/release/pocketbase/pocketbase?color=success&display_name=tag&label=version&logo=docker&logoColor=%23fff&sort=semver&style=for-the-badge">
   </a>
-  <a aria-label="Supported architectures" href="https://github.com/pocketbase/pocketbase/releases" target="_blank">
-    <img alt="Supported Docker architectures" src="https://img.shields.io/badge/platform-amd64%20%7C%20arm64%20%7C%20armv7-brightgreen?style=flat-square&logo=linux&logoColor=%23fff">
+  <a aria-label="Supported Architectures" href="https://hub.docker.com/r/nxtgencat/pocketbase">
+    <img alt="Docker Architectures" src="https://img.shields.io/badge/arch-amd64%20|%20arm64%20|%20armv7-blue?style=for-the-badge&logo=linux&logoColor=%23fff">
+  </a>
+  <a aria-label="Docker Pulls" href="https://hub.docker.com/r/nxtgencat/pocketbase">
+    <img alt="Docker Pulls" src="https://img.shields.io/docker/pulls/nxtgencat/pocketbase?style=for-the-badge&logo=docker&logoColor=%23fff">
   </a>
 </p>
 
----
+## Overview
 
-## Supported Architectures
+This Docker image provides a lightweight, ready-to-use [PocketBase](https://pocketbase.io/) instance that works across multiple architectures. PocketBase is an open source backend consisting of embedded database (SQLite) with realtime subscriptions, built-in auth management, convenient dashboard UI and simple REST-ish API.
 
-Pulling `nxtgencat/pocketbase` will automatically retrieve the appropriate image for your system architecture.
+## Features
 
-| Architecture | Supported |
-|--------------|-----------|
-| amd64        | ✅        |
-| arm64        | ✅        |
-| armv7        | ✅        |
+- **Multi-architecture support**: amd64, arm64, and armv7
+- **Small footprint**: Optimized image size for faster deployments
+- **Easy configuration**: Simple setup with environment variables
+- **Volume mounting**: Persistent data and custom configurations
+- **Health checks**: Built-in container health monitoring
 
-## Version Tags
+## Quick Start
 
-This image offers multiple tags for different versions. Choose the appropriate tag for your use case and exercise caution when using unstable or development tags.
+```bash
+docker run -p 8090:8090 -v pb_data:/pb_data nxtgencat/pocketbase
+```
 
-| Tag    | Available | Description                        |
-|--------|-----------|------------------------------------|
-| latest | ✅        | Latest stable release of PocketBase |
-| x.x.x  | ✅        | Specific patch release             |
-| x.x    | ✅        | Minor release                      |
-| x      | ✅        | Major release                      |
+Access the admin UI at http://localhost:8090/_/ after running.
 
-## Application Setup
+## Tag Versioning
 
-Access the web UI at `<your-ip>:8090`. For more details, refer to the [PocketBase Documentation](https://pocketbase.io/docs/).
+| Tag Structure | Description | Example |
+|---------------|-------------|---------|
+| `latest` | Latest stable release | `nxtgencat/pocketbase:latest` |
+| `x.y.z` | Specific patch version | `nxtgencat/pocketbase:0.16.3` |
+| `x.y` | Latest patch in minor version | `nxtgencat/pocketbase:0.16` |
+| `x` | Latest minor in major version | `nxtgencat/pocketbase:0` |
 
-## Usage
-
-Below  example configurations to get started with a PocketBase container.
-
-### Using Docker Compose (Recommended)
+## Docker Compose (Recommended)
 
 ```yaml
 version: "3.8"
 services:
   pocketbase:
-    image: nxtgencat/pocketbase
+    image: nxtgencat/pocketbase:latest
     container_name: pocketbase
     restart: unless-stopped
     ports:
       - "8090:8090"
     environment:
-      - PB_ADMIN_EMAIL=supercat@pb.io
-      - PB_ADMIN_PASSWORD=Supercat#1
-      - ENCRYPTION=$(openssl rand -hex 16) # Must be 32 characters long
+      - PB_ADMIN_EMAIL=admin@example.com
+      - PB_ADMIN_PASSWORD=SecurePassword123
+      - ENCRYPTION=your32characterencryptionkeyhere
     volumes:
-      - ./pb_data:/pb_data
-      - ./pb_public:/pb_public      
-      - ./pb_hooks:/pb_hooks 
+      - ./pb_data:/pb_data       # Database and storage
+      - ./pb_public:/pb_public   # Public files
+      - ./pb_hooks:/pb_hooks     # JS hooks
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8090/api/health || exit 1
       interval: 5s
@@ -72,8 +72,36 @@ services:
       retries: 5
 ```
 
+## Environment Variables
 
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `PB_ADMIN_EMAIL` | Admin dashboard login email | No |
+| `PB_ADMIN_PASSWORD` | Admin dashboard login password | No |
+| `ENCRYPTION` | Encryption key (must be 32 chars) | No |
 
-## Related Repositories
+## Volumes
 
-- [PocketBase GitHub Repository](https://github.com/pocketbase/pocketbase)
+| Path | Purpose |
+|------|---------|
+| `/pb_data` | Database files and file storage |
+| `/pb_public` | Public assets and files |
+| `/pb_hooks` | JavaScript hooks for custom logic |
+
+## Custom Configuration
+
+For advanced configuration, create a `pocketbase.json` file and mount it to `/pb_data/pocketbase.json`.
+
+## Health Checks
+
+The container includes a built-in health check endpoint at `/api/health` that returns HTTP 200 when PocketBase is running properly.
+
+## Resources
+
+- [PocketBase Documentation](https://pocketbase.io/docs/)
+- [Docker Hub Repository](https://hub.docker.com/r/nxtgencat/pocketbase)
+- [GitHub Repository](https://github.com/pocketbase/pocketbase)
+
+## License
+
+This Docker image is distributed under the same license as PocketBase. See [PocketBase's license](https://github.com/pocketbase/pocketbase/blob/master/LICENSE.md) for details.
