@@ -13,4 +13,4 @@ fi
 
 # Start PocketBase with encryption support
 echo "Starting PocketBase server with encryption..."
-exec pocketbase serve --http=0.0.0.0:8090 --dir=/pb_data --publicDir=/pb_public --hooksDir=/pb_hooks --encryptionEnv ENCRYPTION
+exec pocketbase serve --http=0.0.0.0:8090 --dir=/pb_data --publicDir=/pb_public --hooksDir=/pb_hooks --encryptionEnv PB_ENCRYPTION
