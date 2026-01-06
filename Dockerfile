@@ -11,7 +11,7 @@ RUN curl -fsSL "https://github.com/pocketbase/pocketbase/releases/download/v${VE
     unzip /tmp/pb.zip -d /pocketbase && rm /tmp/pb.zip
 
 COPY entrypoint.sh /pocketbase/
-RUN chmod +x /pocketbase
+RUN chmod +x /pocketbase/entrypoint.sh
 
 EXPOSE 8090
 WORKDIR /pocketbase
