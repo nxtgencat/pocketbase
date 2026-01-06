@@ -21,7 +21,19 @@ This Docker image provides a lightweight, ready-to-use [PocketBase](https://pock
 ## Quick Start
 
 ```bash
-docker run -p 8090:8090 -v pb_data:/pb_data nxtgencat/pocketbase
+docker run -d \
+  --name pocketbase-app \
+  --restart unless-stopped \
+  -p 8090:8090 \
+  -e PB_SUPERUSER_EMAIL="admin@example.com" \
+  -e PB_SUPERUSER_PASSWORD="Password123!" \
+  -e PB_ENCRYPTION_KEY="a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6" \
+  -v pocketbase-app:/pocketbase \
+  --health-cmd="curl -f http://localhost:8090/api/health" \
+  --health-interval=30s \
+  --health-timeout=10s \
+  --health-retries=3 \
+  nxtgencat/pocketbase:latest
 ```
 
 Access the admin UI at <http://localhost:8090/_/> after running.
@@ -39,33 +51,34 @@ Access the admin UI at <http://localhost:8090/_/> after running.
 services:
   pocketbase:
     image: nxtgencat/pocketbase:latest
-    container_name: yourpocketbase
+    container_name: pocketbase-app
     restart: unless-stopped
     ports:
-      - "8091:8090"
+      - "8090:8090"
     environment:
-      PB_ADMIN_EMAIL: "email"
-      PB_ADMIN_PASSWORD: "password"
-      ENCRYPTION: "32bitString"
+      - PB_SUPERUSER_EMAIL="admin@example.com"
+      - PB_SUPERUSER_PASSWORD="Password123!"
+      - PB_ENCRYPTION_KEY="a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
     volumes:
-      - "/pocketbase/your/pb_data:/pb_data"
-      - "/pocketbase/your/pb_public:/pb_public"
-      - "/pocketbase/your/pb_hooks:/pb_hooks"
+      - pocketbase-app:/pocketbase
     healthcheck:
-      test: wget -q --spider http://localhost:8090/api/health || exit 1
-      interval: 60s
-      timeout: 5s
+      test: [ "CMD", "curl", "-f", "http://localhost:8090/api/health" ]
+      interval: 30s
+      timeout: 10s
       retries: 3
-      start_period: 5s
+    
+volumes:
+  pocketbase-app: {}
+
 ```
 
 ## Environment Variables
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `PB_ADMIN_EMAIL` | Admin dashboard login email | No |
-| `PB_ADMIN_PASSWORD` | Admin dashboard login password | No |
-| `ENCRYPTION` | Encryption key (must be 32 chars) | No |
+| `PB_SUPERUSER_EMAIL` | Admin dashboard login email | No |
+| `PB_SUPERUSER_PASSWORD` | Admin dashboard login password | No |
+| `PB_ENCRYPTION_KEY` | Encryption key (must be 32 chars) | No |
 
 ## Volumes
 
@@ -74,6 +87,7 @@ services:
 | `/pb_data` | Database files and file storage |
 | `/pb_public` | Public assets and files |
 | `/pb_hooks` | JavaScript hooks for custom logic |
+| `/pb_migrations` | Database migration files |
 
 ## Custom Configuration
 
