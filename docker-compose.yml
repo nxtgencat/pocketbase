@@ -1,0 +1,21 @@
+services:
+  pocketbase:
+    image: nxtgencat/pocketbase:latest
+    container_name: zorvus-pocketbase
+    restart: unless-stopped
+    expose:
+      - "8090"
+    environment:
+      PB_SUPERUSER_EMAIL: "supercat@pb.io"
+      PB_SUPERUSER_PASSWORD: "Supercat#1"
+      PB_ENCRYPTION_KEY: "b93f5cdff6b7a91d8f8a739e1b2c4e06"
+    volumes:
+      - zorvus-pocketbase:/pocketbase
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8090/api/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  zorvus-pocketbase:

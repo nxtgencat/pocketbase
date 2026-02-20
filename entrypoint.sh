@@ -1,17 +1,16 @@
 #!/bin/sh
 set -e
 
-# Ensure data directories exist
-mkdir -p pb_data pb_public pb_hooks pb_migrations
+mkdir -p /pocketbase/pb_data /pocketbase/pb_public /pocketbase/pb_hooks /pocketbase/pb_migrations
 
-# Bootstrap superuser on first run
-if [ ! -f pb_data/.initialized ] && [ -n "$PB_SUPERUSER_EMAIL" ] && [ -n "$PB_SUPERUSER_PASSWORD" ]; then
-    pocketbase superuser create "$PB_SUPERUSER_EMAIL" "$PB_SUPERUSER_PASSWORD" || true
-    touch pb_data/.initialized
+if [ -n "$PB_SUPERUSER_EMAIL" ] && [ -n "$PB_SUPERUSER_PASSWORD" ]; then
+    pocketbase superuser create "$PB_SUPERUSER_EMAIL" "$PB_SUPERUSER_PASSWORD" --dir=/pocketbase/pb_data || true
 fi
 
-# Build serve command
-CMD="serve --http=0.0.0.0:8090"
-[ -n "$PB_ENCRYPTION_KEY" ] && CMD="$CMD --encryptionEnv=PB_ENCRYPTION_KEY"
-
-exec pocketbase $CMD
+exec pocketbase serve \
+    --http=0.0.0.0:8090 \
+    --dir=/pocketbase/pb_data \
+    --publicDir=/pocketbase/pb_public \
+    --hooksDir=/pocketbase/pb_hooks \
+    --migrationsDir=/pocketbase/pb_migrations \
+    ${PB_ENCRYPTION_KEY:+--encryptionEnv=PB_ENCRYPTION_KEY}
